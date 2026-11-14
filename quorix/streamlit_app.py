@@ -6,12 +6,30 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-st.set_page_config(page_title="QUORIX | Financial Intelligence Terminal", page_icon="◈", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="QUORIX | Financial Intelligence Terminal", page_icon="◈", layout="wide", initial_sidebar_state="collapsed")
 st.markdown("""<style>
-[data-testid="stAppViewContainer"]{background:#0b1019}
-[data-testid="stSidebar"]{background:#101927}
-h1,h2,h3{letter-spacing:-.025em}
-div[data-testid="stMetric"]{background:#142034;border:1px solid #2c3d55;border-radius:12px;padding:15px}
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+html,body,[class*="css"],[data-testid="stAppViewContainer"]{font-family:'DM Sans',sans-serif}
+[data-testid="stAppViewContainer"]{background:linear-gradient(135deg,#090f19 0%,#0d1522 58%,#0b1220 100%)}
+[data-testid="stSidebar"]{background:#0e1726;border-right:1px solid #26354a}
+[data-testid="stHeader"]{background:rgba(9,15,25,.78);backdrop-filter:blur(12px)}
+.block-container{padding-top:2rem;max-width:1450px}
+h1,h2,h3{font-family:'Space Grotesk',sans-serif;letter-spacing:-.04em}
+h1{font-size:2rem!important;font-weight:700!important}
+h3{font-size:1.12rem!important}
+div[data-testid="stMetric"]{background:linear-gradient(135deg,#142238,#101b2c);border:1px solid #26384e;border-radius:12px;padding:15px 17px}
+div[data-testid="stMetricLabel"]{color:#8ea3bb}
+div[data-testid="stMetricValue"]{font-family:'Space Grotesk';font-size:1.45rem}
+div[data-testid="stDataFrame"]{border:1px solid #26384e;border-radius:12px;overflow:hidden}
+.stButton button[kind="primary"]{background:#447de8;border:0;border-radius:8px}
+.stButton button{border-radius:8px}
+div[data-testid="stAlert"]{border-radius:9px}
+.q-hero{background:linear-gradient(110deg,#13243b,#102039 60%,#152f48);border:1px solid #2b405c;border-radius:16px;padding:23px 26px;margin:2px 0 20px}
+.q-eyebrow{color:#80b7fb;font-size:11px;letter-spacing:.18em;font-weight:700}
+.q-title{font-family:'Space Grotesk';font-size:30px;font-weight:700;letter-spacing:-.04em;color:#f4f7ff;margin-top:6px}
+.q-sub{color:#9eb2ca;font-size:13px;margin-top:5px}
+.q-strip{color:#87a4c4;font-size:11px;letter-spacing:.08em;padding:7px 0 16px}
+@media(max-width:700px){.block-container{padding:1.1rem .9rem}.q-hero{padding:17px}.q-title{font-size:24px}h1{font-size:1.65rem!important}}
 </style>""", unsafe_allow_html=True)
 
 def setting(key):
@@ -31,38 +49,57 @@ def show_error(exc):
     st.error(f"Provider request failed: {type(exc).__name__}: {exc}")
 
 sections = {
-    "TERMINAL": ["Overview", "Global Markets", "Equity Analytics", "Fixed Income", "Derivatives", "Macro Intelligence"],
-    "RESEARCH": ["Corporate Intelligence", "Prediction Markets", "News Intelligence", "AI Research", "Quant Research"],
+    "MARKETS": ["Overview", "Global Markets", "Equity Analytics", "Fixed Income", "Derivatives", "Macro Intelligence"],
+    "INTELLIGENCE": ["Corporate Intelligence", "Prediction Markets", "News Intelligence", "AI Research", "Quant Research"],
     "PORTFOLIO": ["Portfolio Analytics", "Risk Management", "Screening", "Alerts"],
-    "PLATFORM": ["Administration"],
+    "SETTINGS": ["Administration"],
 }
-st.sidebar.title("◈ QUORIX")
-st.sidebar.caption("FINANCIAL INTELLIGENCE TERMINAL")
+st.sidebar.markdown("## ◈ QUORIX")
+st.sidebar.markdown('<span style="color:#7f9bbd;font-size:10px;letter-spacing:.16em">FINANCIAL INTELLIGENCE</span>', unsafe_allow_html=True)
 choices = [item for items in sections.values() for item in items]
-workspace = st.sidebar.radio("Workspaces", choices, label_visibility="collapsed")
+workspace = st.sidebar.radio("Navigation", choices, index=choices.index(st.session_state.pop("nav_target","Overview")), label_visibility="collapsed")
 st.sidebar.divider()
-st.sidebar.caption("Beta · Data sources clearly labelled · No simulated quotes")
-if st.sidebar.button("Refresh provider cache", use_container_width=True):
+if st.sidebar.button("↻  Refresh", use_container_width=True):
     get_json.clear()
     st.rerun()
-st.title(workspace)
-st.caption("QUORIX / Institutional research workspace / Public-data beta")
-a,b,c,d = st.columns(4)
-a.metric("Platform", "QUORIX")
-b.metric("Workspace", f"{choices.index(workspace)+1} / {len(choices)}")
-c.metric("Mode", "Read-only")
-d.metric("Data", "Provider-labelled")
-st.caption("Session checked (UTC): " + datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S") + " · Refresh source data using the fetch buttons.")
-st.divider()
+st.markdown(f'<div class="q-hero"><div class="q-eyebrow">QUORIX / {next(k for k,v in sections.items() if workspace in v)}</div><div class="q-title">{workspace}</div><div class="q-sub">Markets, data and analytical tools in one workspace</div></div>', unsafe_allow_html=True)
+st.markdown('<div class="q-strip">◉ TERMINAL ONLINE &nbsp; · &nbsp; UTC '+datetime.now(timezone.utc).strftime("%d %b %Y · %H:%M")+'</div>',unsafe_allow_html=True)
 
 if workspace == "Overview":
-    st.subheader("Connected research sources")
-    st.dataframe(pd.DataFrame([
-        {"Source":"Polymarket Gamma","Coverage":"Active prediction markets","Requirement":"Public API"},
-        {"Source":"FRED","Coverage":"Economic observations and US Treasury yields","Requirement":"FRED_API_KEY"},
-        {"Source":"SEC EDGAR","Coverage":"US company filings","Requirement":"SEC_USER_AGENT"},
-    ]), use_container_width=True, hide_index=True)
-    st.info("Additional institutional modules are under development. No fabricated live prices or analytics are shown.")
+    left,right = st.columns([2.15,1],gap="large")
+    with left:
+        st.subheader("Prediction market activity")
+        try:
+            markets = get_json("https://gamma-api.polymarket.com/markets", {"active":"true","closed":"false","limit":40,"order":"volumeNum","ascending":"false"})
+            df = pd.DataFrame([{"Market":m.get("question",""),"Volume (USD)":pd.to_numeric(m.get("volumeNum",m.get("volume")),errors="coerce"),"Liquidity (USD)":pd.to_numeric(m.get("liquidityNum",m.get("liquidity")),errors="coerce"),"Closes":m.get("endDate","")[:10]} for m in markets])
+            if not df.empty:
+                c1,c2,c3 = st.columns(3)
+                c1.metric("Active markets shown",f"{len(df):,}")
+                c2.metric("Combined volume",f"${df['Volume (USD)'].sum():,.0f}")
+                c3.metric("Combined liquidity",f"${df['Liquidity (USD)'].sum():,.0f}")
+                st.dataframe(df, use_container_width=True,hide_index=True,height=465)
+                st.download_button("Export market data",df.to_csv(index=False),"quorix-markets.csv","text/csv")
+            else:
+                st.warning("No active markets returned.")
+        except (httpx.HTTPError,ValueError,KeyError) as exc:
+            show_error(exc)
+    with right:
+        st.subheader("Research desk")
+        st.markdown("**Economic series**")
+        st.caption("FRED · US economic indicators")
+        if st.button("Open macro intelligence",use_container_width=True):
+            st.session_state["nav_target"]="Macro Intelligence"
+            st.rerun()
+        st.markdown("**Company filings**")
+        st.caption("SEC EDGAR · US corporate disclosures")
+        if st.button("Open corporate intelligence",use_container_width=True):
+            st.session_state["nav_target"]="Corporate Intelligence"
+            st.rerun()
+        st.markdown("**Market probabilities**")
+        st.caption("Polymarket · Active contracts")
+        if st.button("Open prediction markets",use_container_width=True):
+            st.session_state["nav_target"]="Prediction Markets"
+            st.rerun()
 elif workspace == "Prediction Markets":
     st.subheader("Polymarket — active markets")
     limit = st.slider("Number of markets", 10, 100, 30, 10)
@@ -126,8 +163,16 @@ elif workspace in ("Corporate Intelligence","Equity Analytics"):
         st.dataframe(df.head(200),use_container_width=True,hide_index=True)
         st.download_button("Download CSV",df.to_csv(index=False),"quorix-sec-filings.csv","text/csv")
 else:
-    st.info(f"{workspace} is a planned research module. A verified provider connection and analytical engine must be implemented before this workspace can display trustworthy results.")
-    st.markdown("**Production requirements:** data licensing, persistent storage, authentication, role-based access, monitoring, and tested analytics.")
+    st.subheader("Workspace")
+    st.markdown("Select a connected data module from the navigation.")
+    col1,col2=st.columns(2)
+    with col1:
+        if st.button("Prediction markets",use_container_width=True):
+            st.session_state["nav_target"]="Prediction Markets"
+            st.rerun()
+    with col2:
+        if st.button("Company filings",use_container_width=True):
+            st.session_state["nav_target"]="Corporate Intelligence"
+            st.rerun()
 
-st.divider()
-st.caption("QUORIX is not affiliated with Bloomberg. Data may be delayed, incomplete or subject to provider terms. Not investment advice.")
+
