@@ -1,7 +1,7 @@
 import os
 import httpx
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, FileResponse
 
 app = FastAPI(title="MarketOS Pro", version="0.3.0")
 HEADERS = {"User-Agent": os.getenv("SEC_USER_AGENT", "MarketOS research contact admin@example.com")}
@@ -45,7 +45,7 @@ async def sec(cik: str):
 
 @app.get("/", response_class=HTMLResponse)
 async def index():
-    return PAGE
+    return FileResponse("terminal.html")
 
 PAGE = """<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
