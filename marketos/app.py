@@ -3,8 +3,8 @@ import httpx
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse, FileResponse
 
-app = FastAPI(title="MarketOS Pro", version="0.3.0")
-HEADERS = {"User-Agent": os.getenv("SEC_USER_AGENT", "MarketOS research contact admin@example.com")}
+app = FastAPI(title="Quorix Terminal", version="0.3.0")
+HEADERS = {"User-Agent": os.getenv("SEC_USER_AGENT", "Quorix research contact admin@example.com")}
 
 async def fetch(url, params=None, headers=None):
     async with httpx.AsyncClient(timeout=18, follow_redirects=True) as client:
@@ -49,7 +49,7 @@ async def index():
 
 PAGE = """<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MarketOS Pro | Financial Intelligence</title>
+<title>Quorix Terminal | Financial Intelligence</title>
 <style>
 :root{color-scheme:dark;font-family:Inter,ui-sans-serif,system-ui,Arial;background:#0a0e17;color:#edf2fc}
 *{box-sizing:border-box}body{margin:0}.shell{display:grid;grid-template-columns:230px 1fr;min-height:100vh}
@@ -72,7 +72,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{text-align:left;b
 th{color:#9fb0cb}.error{color:#ff9b9b}.muted{color:#8fa2bd}
 @media(max-width:850px){.shell{display:block}aside{padding:12px;display:flex;align-items:center;gap:8px;overflow:auto}.brand{margin:0 15px 0 0;white-space:nowrap}.nav{white-space:nowrap}main{padding:18px}.grid{grid-template-columns:1fr}}
 </style></head><body>
-<div class="shell"><aside><div class="brand">◈ MarketOS Pro</div>
+<div class="shell"><aside><div class="brand">◈ Quorix Terminal</div>
 <div class="nav active" onclick="tab('overview',this)">Overview</div>
 <div class="nav" onclick="tab('predictions',this)">Prediction markets</div>
 <div class="nav" onclick="tab('macro',this)">Macro data</div>
@@ -82,7 +82,7 @@ th{color:#9fb0cb}.error{color:#ff9b9b}.muted{color:#8fa2bd}
 <div class="card"><small>Economic series</small><b>FRED</b><small>Federal Reserve data</small></div>
 <div class="card"><small>Corporate disclosures</small><b>SEC EDGAR</b><small>Official US company filings</small></div></div>
 <section class="card"><div class="controls" id="controls"></div><div id="output" class="muted">Select a workspace to retrieve provider data.</div></section>
-<p class="muted">Data is informational, may be delayed or unavailable, and is not investment advice. MarketOS is not affiliated with Bloomberg.</p>
+<p class="muted">Data is informational, may be delayed or unavailable, and is not investment advice. Quorix is not affiliated with Bloomberg.</p>
 </main></div>
 <script>
 let active='overview';
