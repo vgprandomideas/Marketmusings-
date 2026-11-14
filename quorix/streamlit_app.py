@@ -1,5 +1,8 @@
 import os
 import json
+import html
+import xml.etree.ElementTree as ET
+from urllib.parse import urlencode
 from datetime import datetime, timezone
 import httpx
 import pandas as pd
@@ -24,6 +27,12 @@ div[data-testid="stDataFrame"]{border:1px solid #26384e;border-radius:12px;overf
 .stButton button[kind="primary"]{background:#447de8;border:0;border-radius:8px}
 .stButton button{border-radius:8px}
 div[data-testid="stAlert"]{border-radius:9px}
+.q-news{border:1px solid #293c54;border-radius:13px;background:linear-gradient(145deg,#142238,#101b2c);padding:17px 18px;margin:9px 0 13px;min-height:150px}
+.q-news a{color:#f0f5ff!important;text-decoration:none!important;font-size:15px;font-weight:650;line-height:1.45}
+.q-news a:hover{color:#8dbaff!important}
+.q-news-meta{font-size:10px;color:#83a5ce;letter-spacing:.1em;text-transform:uppercase;margin-bottom:11px}
+.q-news-time{font-size:11px;color:#91a4bd;margin-top:12px}
+.q-section{border-top:1px solid #26384e;padding-top:18px;margin-top:25px;color:#e8efff;font-size:17px;font-weight:700}
 .q-hero{background:linear-gradient(110deg,#13243b,#102039 60%,#152f48);border:1px solid #2b405c;border-radius:16px;padding:23px 26px;margin:2px 0 20px}
 .q-eyebrow{color:#80b7fb;font-size:11px;letter-spacing:.18em;font-weight:700}
 .q-title{font-family:'Space Grotesk';font-size:30px;font-weight:700;letter-spacing:-.04em;color:#f4f7ff;margin-top:6px}
@@ -68,6 +77,62 @@ def yahoo_history(symbol,period="6mo"):
     ts=result.get("timestamp",[])
     values=result["indicators"]["quote"][0]["close"]
     return pd.DataFrame([{"Date":datetime.fromtimestamp(t,timezone.utc).date(),"Close":float(v)} for t,v in zip(ts,values) if v is not None])
+
+NEWS_QUERIES = {
+"Overview":"global financial markets stocks bonds currencies",
+"Global Markets":"global stock markets financial markets",
+"Equity Analytics":"stock market earnings corporate results",
+"Fixed Income":"bond market treasury yields central banks",
+"Derivatives":"options futures derivatives markets",
+"Macro Intelligence":"inflation GDP interest rates economy",
+"Corporate Intelligence":"company earnings mergers acquisitions SEC",
+"Prediction Markets":"prediction markets Polymarket Kalshi",
+"News Intelligence":"financial markets economy business",
+"AI Research":"artificial intelligence financial markets research",
+"Quant Research":"quantitative trading systematic investing",
+"Portfolio Analytics":"asset allocation portfolio investing",
+"Risk Management":"market volatility risk credit spreads",
+"Screening":"stock valuation equity screening",
+"Alerts":"financial markets volatility breaking",
+"Administration":"financial data technology market infrastructure"
+}
+
+@st.cache_data(ttl=900,show_spinner=False)
+def topic_articles(topic):
+    url="https://news.google.com/rss/search?"+urlencode({"q":NEWS_QUERIES.get(topic,"financial markets")+" when:7d","hl":"en-US","gl":"US","ceid":"US:en"})
+    with httpx.Client(timeout=12,follow_redirects=True,headers={"User-Agent":"Mozilla/5.0"}) as client:
+        response=client.get(url)
+        response.raise_for_status()
+    root=ET.fromstring(response.content)
+    items=[]
+    for item in root.findall("./channel/item")[:4]:
+        title=(item.findtext("title") or "").strip()
+        link=(item.findtext("link") or "").strip()
+        source_node=item.find("source")
+        source=(source_node.text or "").strip() if source_node is not None else "News"
+        date=(item.findtext("pubDate") or "").strip()
+        if title and link.startswith("https://"):
+            items.append({"title":title,"link":link,"source":source,"date":date})
+    return items
+
+def render_topic_news(topic):
+    st.markdown('<div class="q-section">Latest intelligence <span style="font-size:11px;font-weight:500;color:#91a8c8"> · NEWS / 7 DAYS</span></div>',unsafe_allow_html=True)
+    try:
+        articles=topic_articles(topic)
+        if not articles:
+            st.caption("No recent articles available.")
+            return
+        for i in range(0,len(articles),2):
+            cols=st.columns(2,gap="medium")
+            for col,article in zip(cols,articles[i:i+2]):
+                with col:
+                    title=html.escape(article["title"],quote=True)
+                    link=html.escape(article["link"],quote=True)
+                    source=html.escape(article["source"],quote=True)
+                    date=html.escape(article["date"][:22],quote=True)
+                    st.markdown(f'<div class="q-news"><div class="q-news-meta">{source}</div><a href="{link}" target="_blank" rel="noopener noreferrer">{title} ↗</a><div class="q-news-time">{date}</div></div>',unsafe_allow_html=True)
+    except (httpx.HTTPError,ET.ParseError,ValueError):
+        st.caption("News feed temporarily unavailable.")
 
 def show_error(exc):
     st.error(f"Provider request failed: {type(exc).__name__}: {exc}")
@@ -327,3 +392,5 @@ else:
             st.rerun()
 
 
+
+render_topic_news(workspace)
