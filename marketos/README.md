@@ -1,4 +1,4 @@
-# MarketOS Pro — deployment scaffold
+# Quorix Terminal — deployment scaffold
 
 A FastAPI-based financial research dashboard with server-side public data integrations.
 
