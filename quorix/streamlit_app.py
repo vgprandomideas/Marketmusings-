@@ -57,7 +57,9 @@ sections = {
 st.sidebar.markdown("## ◈ QUORIX")
 st.sidebar.markdown('<span style="color:#7f9bbd;font-size:10px;letter-spacing:.16em">FINANCIAL INTELLIGENCE</span>', unsafe_allow_html=True)
 choices = [item for items in sections.values() for item in items]
-workspace = st.sidebar.radio("Navigation", choices, index=choices.index(st.session_state.pop("nav_target","Overview")), label_visibility="collapsed")
+if "nav_target" in st.session_state:
+    st.session_state["selected_workspace"] = st.session_state.pop("nav_target")
+workspace = st.sidebar.radio("Navigation", choices, key="selected_workspace", label_visibility="collapsed")
 st.sidebar.divider()
 if st.sidebar.button("↻  Refresh", use_container_width=True):
     get_json.clear()
