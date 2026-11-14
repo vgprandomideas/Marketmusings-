@@ -1,5 +1,6 @@
 import os
 import json
+from datetime import datetime, timezone
 import httpx
 import pandas as pd
 import plotly.express as px
@@ -41,6 +42,9 @@ choices = [item for items in sections.values() for item in items]
 workspace = st.sidebar.radio("Workspaces", choices, label_visibility="collapsed")
 st.sidebar.divider()
 st.sidebar.caption("Beta · Data sources clearly labelled · No simulated quotes")
+if st.sidebar.button("Refresh provider cache", use_container_width=True):
+    get_json.clear()
+    st.rerun()
 st.title(workspace)
 st.caption("QUORIX / Institutional research workspace / Public-data beta")
 a,b,c,d = st.columns(4)
@@ -48,6 +52,7 @@ a.metric("Platform", "QUORIX")
 b.metric("Workspace", f"{choices.index(workspace)+1} / {len(choices)}")
 c.metric("Mode", "Read-only")
 d.metric("Data", "Provider-labelled")
+st.caption("Session checked (UTC): " + datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S") + " · Refresh source data using the fetch buttons.")
 st.divider()
 
 if workspace == "Overview":
@@ -117,7 +122,7 @@ elif workspace in ("Corporate Intelligence","Equity Analytics"):
         st.subheader(data.get("name","Company"))
         recent=data.get("filings",{}).get("recent",{})
         fields=["filingDate","form","accessionNumber","primaryDocument"]
-        df=pd.DataFrame({field:recent.get(field,[]) for field in fields})
+        df=pd.DataFrame([{field:recent.get(field,[])[i] if i < len(recent.get(field,[])) else None for field in fields} for i in range(len(recent.get("accessionNumber",[])))])
         st.dataframe(df.head(200),use_container_width=True,hide_index=True)
         st.download_button("Download CSV",df.to_csv(index=False),"quorix-sec-filings.csv","text/csv")
 else:
